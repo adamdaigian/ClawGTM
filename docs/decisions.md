@@ -11,3 +11,5 @@
 - Audit log and artifact registry persist both in memory (fast local orchestration) and optionally to SQLite through the shared DB adapter.
 - Step 4 uses Google Workspace as the primary identity provider with a dual-mode adapter: `mock` for local end-to-end runs and `real` for Admin SDK REST calls using an injected access token provider.
 - Microsoft 365 remains a stub in v0.1 but implements the same `IdentityProviderAdapter` contract to keep provider swapping deterministic.
+- Step 5 Slack collaboration is implemented with strict single-channel task thread discipline and persisted mapping rows keyed by channel/thread/message to agent/task/run.
+- Slack user provisioning prefers automation (`inviteUser`) but always falls back to a durable manual-invite artifact when scopes or APIs are unavailable.
