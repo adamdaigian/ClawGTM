@@ -15,3 +15,5 @@
 - Slack user provisioning prefers automation (`inviteUser`) but always falls back to a durable manual-invite artifact when scopes or APIs are unavailable.
 - Step 6 OAuth onboarding defaults to `mock` mode for local runnable flows and supports `real` mode for Google/Slack token exchange when env credentials are provided.
 - OAuth start/complete state is persisted in `.clawgtm/oauth_state.json` so operators can run commands in separate terminal invocations without losing state.
+- Step 7 approval gates are implemented as a hard propose -> decision -> execute state machine. `execute` is blocked unless status is `approved`.
+- CLI approvals persist to `.clawgtm/approvals.json`, and every propose/decision/execute event is written to the unified audit log (`.clawgtm/audit.log.jsonl`).
