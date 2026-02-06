@@ -7,3 +7,5 @@
 - Agent write-scope is enforced against canonical artifact output paths declared in `clawgtm/agents.manifest.yaml`; writes outside allowed paths are rejected.
 - Agent set is strict and includes `partnerships` disabled by default, matching the v1 spec.
 - Output paths shared by multiple agents are allowed (for collaborative draft/final workflows), with Head of Revenue intended to publish final `gtm/*` artifacts in orchestration.
+- Task and Result contracts are implemented as exact TypeScript interfaces plus runtime validators (no external schema runtime dependency) and mirrored in `docs/clawgtm/contracts.md`.
+- Audit log and artifact registry persist both in memory (fast local orchestration) and optionally to SQLite through the shared DB adapter.
