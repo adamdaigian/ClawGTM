@@ -10,9 +10,5 @@
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
-  },
-  "dependencies": {
-    "yaml": "^2.8.2",
-    "zod": "^4.3.6"
   }
 }

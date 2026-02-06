@@ -1,0 +1,96 @@
+version: 1
+org_domain: example.com
+agents:
+  - slug: headofrevenue
+    role_name: Head of Revenue
+    display_name: ClawGTM — Head of Revenue
+    enabled: true
+    groups: [clawgtm-all, clawgtm-admin]
+    output_paths:
+      - gtm/strategy.md
+      - gtm/channel_plan.md
+      - gtm/experiment_backlog.md
+      - metrics/weekly_scorecard.md
+  - slug: researcher
+    role_name: Researcher
+    display_name: ClawGTM — Researcher
+    enabled: true
+    groups: [clawgtm-all, clawgtm-marketing]
+    output_paths:
+      - analysis/market_landscape.md
+      - analysis/competitive_matrix.md
+      - analysis/icp_summary.md
+      - analysis/jtbd_framework.md
+  - slug: narrative
+    role_name: Narrative Engineer
+    display_name: ClawGTM — Narrative Engineer
+    enabled: true
+    groups: [clawgtm-all, clawgtm-marketing]
+    output_paths:
+      - narrative/positioning.md
+      - narrative/messaging_framework.md
+      - narrative/value_props.md
+  - slug: vibe_marketer
+    role_name: Vibe Marketer
+    display_name: ClawGTM — Vibe Marketer
+    enabled: true
+    groups: [clawgtm-all, clawgtm-marketing]
+    output_paths:
+      - gtm/experiment_backlog.md
+  - slug: performance_marketer
+    role_name: Performance Marketer
+    display_name: ClawGTM — Performance Marketer
+    enabled: true
+    groups: [clawgtm-all, clawgtm-marketing]
+    output_paths:
+      - gtm/channel_plan.md
+      - gtm/experiment_backlog.md
+  - slug: aeo_geo
+    role_name: AEO and GEO Specialist
+    display_name: ClawGTM — AEO and GEO Specialist
+    enabled: true
+    groups: [clawgtm-all, clawgtm-marketing]
+    output_paths:
+      - gtm/channel_plan.md
+  - slug: growth_analyst
+    role_name: Growth Analyst
+    display_name: ClawGTM — Growth Analyst
+    enabled: true
+    groups: [clawgtm-all, clawgtm-marketing]
+    output_paths:
+      - metrics/north_star_tree.md
+      - metrics/metrics_dictionary.md
+      - metrics/weekly_scorecard.md
+  - slug: gtm_engineer
+    role_name: GTM Engineer
+    display_name: ClawGTM — GTM Engineer
+    enabled: true
+    groups: [clawgtm-all, clawgtm-engineering]
+    output_paths:
+      - gtm/experiment_backlog.md
+  - slug: bdr
+    role_name: BDR
+    display_name: ClawGTM — BDR
+    enabled: true
+    groups: [clawgtm-all, clawgtm-sales]
+    output_paths:
+      - sales/outreach_sequences.md
+      - sales/talk_tracks.md
+      - sales/objection_log.md
+  - slug: revops
+    role_name: RevOps
+    display_name: ClawGTM — RevOps
+    enabled: true
+    groups: [clawgtm-all, clawgtm-revops]
+    output_paths:
+      - revops/funnel_definition.md
+      - revops/lifecycle_stages.md
+      - revops/crm_schema.md
+  - slug: partnerships
+    role_name: Partnerships
+    display_name: ClawGTM — Partnerships
+    enabled: false
+    groups: [clawgtm-all]
+    output_paths:
+      - partners/partner_landscape.md
+      - partners/activation_playbooks.md
