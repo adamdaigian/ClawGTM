@@ -9,3 +9,5 @@
 - Output paths shared by multiple agents are allowed (for collaborative draft/final workflows), with Head of Revenue intended to publish final `gtm/*` artifacts in orchestration.
 - Task and Result contracts are implemented as exact TypeScript interfaces plus runtime validators (no external schema runtime dependency) and mirrored in `docs/clawgtm/contracts.md`.
 - Audit log and artifact registry persist both in memory (fast local orchestration) and optionally to SQLite through the shared DB adapter.
+- Step 4 uses Google Workspace as the primary identity provider with a dual-mode adapter: `mock` for local end-to-end runs and `real` for Admin SDK REST calls using an injected access token provider.
+- Microsoft 365 remains a stub in v0.1 but implements the same `IdentityProviderAdapter` contract to keep provider swapping deterministic.
