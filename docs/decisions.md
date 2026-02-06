@@ -13,3 +13,5 @@
 - Microsoft 365 remains a stub in v0.1 but implements the same `IdentityProviderAdapter` contract to keep provider swapping deterministic.
 - Step 5 Slack collaboration is implemented with strict single-channel task thread discipline and persisted mapping rows keyed by channel/thread/message to agent/task/run.
 - Slack user provisioning prefers automation (`inviteUser`) but always falls back to a durable manual-invite artifact when scopes or APIs are unavailable.
+- Step 6 OAuth onboarding defaults to `mock` mode for local runnable flows and supports `real` mode for Google/Slack token exchange when env credentials are provided.
+- OAuth start/complete state is persisted in `.clawgtm/oauth_state.json` so operators can run commands in separate terminal invocations without losing state.
