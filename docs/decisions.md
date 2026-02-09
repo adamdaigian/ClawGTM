@@ -17,3 +17,6 @@
 - OAuth start/complete state is persisted in `.clawgtm/oauth_state.json` so operators can run commands in separate terminal invocations without losing state.
 - Step 7 approval gates are implemented as a hard propose -> decision -> execute state machine. `execute` is blocked unless status is `approved`.
 - CLI approvals persist to `.clawgtm/approvals.json`, and every propose/decision/execute event is written to the unified audit log (`.clawgtm/audit.log.jsonl`).
+- Step 8 onboarding is business-context-first: operators provide company/service/ICP/objective, and ClawGTM writes canonical input docs before orchestrating agent tasks.
+- Onboarding orchestration runs a strict 4-step sequence (Researcher -> Narrative -> Growth Analyst -> Head of Revenue), with Narrative hard-blocked when JTBD structure is missing.
+- ClawGTM onboarding emits a durable run summary (`.clawgtm/runs/<run_id>.json`) that links task IDs, registry artifacts, and audit events for replayability.

@@ -1,12 +1,16 @@
-import type { SlackClient, SlackPostInput, SlackPostedMessage, SlackReadMessage } from './contracts.js';
-import { ThreadMappingStore } from './thread-mapping-store.js';
+import type { SlackClient, SlackPostInput, SlackPostedMessage, SlackReadMessage } from './contracts.ts';
+import { ThreadMappingStore } from './thread-mapping-store.ts';
 
 export class SlackGateway {
-  constructor(
-    private readonly client: SlackClient,
-    private readonly mappingStore: ThreadMappingStore,
-    private readonly configuredChannelId: string,
-  ) {}
+  private readonly client: SlackClient;
+  private readonly mappingStore: ThreadMappingStore;
+  private readonly configuredChannelId: string;
+
+  constructor(client: SlackClient, mappingStore: ThreadMappingStore, configuredChannelId: string) {
+    this.client = client;
+    this.mappingStore = mappingStore;
+    this.configuredChannelId = configuredChannelId;
+  }
 
   async postTaskUpdate(input: SlackPostInput): Promise<SlackPostedMessage> {
     if (input.channelId !== this.configuredChannelId) {

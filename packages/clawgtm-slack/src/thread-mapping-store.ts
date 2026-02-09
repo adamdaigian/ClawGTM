@@ -1,10 +1,12 @@
-import type { DBAdapter } from '../../clawgtm-core/src/db.js';
-import type { SlackThreadMapping } from './contracts.js';
+import type { DBAdapter } from '../../clawgtm-core/src/db.ts';
+import type { SlackThreadMapping } from './contracts.ts';
 
 export class ThreadMappingStore {
   private readonly rows: SlackThreadMapping[] = [];
+  private readonly db?: DBAdapter;
 
-  constructor(private readonly db?: DBAdapter) {
+  constructor(db?: DBAdapter) {
+    this.db = db;
     if (db) {
       db.execute(
         'CREATE TABLE IF NOT EXISTS clawgtm_slack_thread_map (slack_channel_id TEXT NOT NULL, slack_thread_ts TEXT NOT NULL, slack_message_ts TEXT NOT NULL, agent_id TEXT NOT NULL, task_id TEXT NOT NULL, run_id TEXT NOT NULL)',

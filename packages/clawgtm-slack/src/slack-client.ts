@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { SlackClient, SlackReadMessage, SlackUserInviteInput } from './contracts.js';
+import type { SlackClient, SlackReadMessage, SlackUserInviteInput } from './contracts.ts';
 
 interface RealSlackClientOptions {
   botToken: string;
@@ -8,8 +8,10 @@ interface RealSlackClientOptions {
 
 export class RealSlackClient implements SlackClient {
   private readonly fetchImpl: typeof fetch;
+  private readonly options: RealSlackClientOptions;
 
-  constructor(private readonly options: RealSlackClientOptions) {
+  constructor(options: RealSlackClientOptions) {
+    this.options = options;
     this.fetchImpl = options.fetchImpl ?? fetch;
   }
 

@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import { pathToFileURL } from 'node:url';
+import { captureBusinessContext } from '../../clawgtm-orchestrator/src/context-capture.ts';
+import { runOnboardingWorkflow } from '../../clawgtm-orchestrator/src/onboarding-orchestrator.ts';
 import { createCliContext } from './context.ts';
 import { OAuthStateStore } from './oauth-state-store.ts';
 import type { OAuthProviderName } from '../../../packages/clawgtm-auth/src/contracts.ts';
@@ -154,6 +156,55 @@ async function handleApprove(args: string[]): Promise<void> {
   );
 }
 
+async function handleOnboard(args: string[]): Promise<void> {
+  const subcommand = args[1] ?? '';
+
+  if (subcommand === 'context' || subcommand === 'full') {
+    const workspaceRoot = readFlag(args, '--workspace-root') ?? process.cwd();
+    const contextResult = captureBusinessContext({
+      companyName: requireFlag(args, '--company-name'),
+      serviceSummary: requireFlag(args, '--service-summary'),
+      objective: requireFlag(args, '--objective'),
+      icp: requireFlag(args, '--icp'),
+      constraints: readFlag(args, '--constraints') ?? 'No autonomous external actions without approval.',
+      pricing: readFlag(args, '--pricing') ?? 'TBD',
+      targetMetrics: readFlag(args, '--target-metrics') ?? 'Define north-star + leading indicators.',
+    }, workspaceRoot);
+
+    console.log(JSON.stringify({
+      step: 'context-captured',
+      written_files: contextResult.writtenFiles,
+    }, null, 2));
+
+    if (subcommand === 'context') {
+      return;
+    }
+  }
+
+  if (subcommand === 'run' || subcommand === 'full') {
+    const result = await runOnboardingWorkflow({
+      objective: requireFlag(args, '--objective'),
+      channelId: readFlag(args, '--channel') ?? 'C-CLAWGTM-WAR-ROOM',
+      workspaceRoot: readFlag(args, '--workspace-root') ?? process.cwd(),
+    });
+
+    console.log(JSON.stringify({
+      step: 'onboarding-complete',
+      run_id: result.runId,
+      task_ids: result.taskIds,
+      blocked: result.blocked,
+      summary_path: result.summaryPath,
+    }, null, 2));
+    return;
+  }
+
+  throw new Error(
+    'Usage: clawgtm onboard <context|run|full> ...\n' +
+      '  context/full flags: --company-name --service-summary --objective --icp [--constraints] [--pricing] [--target-metrics] [--workspace-root]\n' +
+      '  run/full flags: --objective [--channel] [--workspace-root]',
+  );
+}
+
 export async function runCli(args: string[]): Promise<void> {
   const command = args[0];
 
@@ -167,7 +218,12 @@ export async function runCli(args: string[]): Promise<void> {
     return;
   }
 
-  throw new Error('Usage: clawgtm <auth|approve> ...');
+  if (command === 'onboard') {
+    await handleOnboard(args);
+    return;
+  }
+
+  throw new Error('Usage: clawgtm <auth|approve|onboard> ...');
 }
 
 const argv1 = process.argv[1];

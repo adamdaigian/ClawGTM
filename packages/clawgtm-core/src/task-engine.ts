@@ -1,6 +1,6 @@
-import { AuditLog } from './audit-log.js';
-import { ArtifactRegistry } from './artifact-registry.js';
-import { type Result, type Task, validateResult, validateTask } from './contracts.js';
+import { AuditLog } from './audit-log.ts';
+import { ArtifactRegistry } from './artifact-registry.ts';
+import { type Result, type Task, validateResult, validateTask } from './contracts.ts';
 
 export interface CompleteTaskInput {
   runId: string;
@@ -11,11 +11,13 @@ export interface CompleteTaskInput {
 export class TaskEngine {
   private readonly tasks = new Map<string, Task>();
   private readonly results = new Map<string, Result>();
+  private readonly auditLog: AuditLog;
+  private readonly artifactRegistry: ArtifactRegistry;
 
-  constructor(
-    private readonly auditLog: AuditLog,
-    private readonly artifactRegistry: ArtifactRegistry,
-  ) {}
+  constructor(auditLog: AuditLog, artifactRegistry: ArtifactRegistry) {
+    this.auditLog = auditLog;
+    this.artifactRegistry = artifactRegistry;
+  }
 
   createTask(task: Task): void {
     validateTask(task);

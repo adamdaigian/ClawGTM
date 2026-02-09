@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { DBAdapter } from './db.js';
+import type { DBAdapter } from './db.ts';
 
 export interface ArtifactRecord {
   artifact_id: string;
@@ -14,8 +14,10 @@ export interface ArtifactRecord {
 
 export class ArtifactRegistry {
   private readonly records: ArtifactRecord[] = [];
+  private readonly db?: DBAdapter;
 
-  constructor(private readonly db?: DBAdapter) {
+  constructor(db?: DBAdapter) {
+    this.db = db;
     if (db) {
       db.execute(
         'CREATE TABLE IF NOT EXISTS clawgtm_artifact_registry (artifact_id TEXT PRIMARY KEY, task_id TEXT, run_id TEXT, agent_id TEXT, type TEXT, path TEXT, created_at TEXT, description TEXT)',
