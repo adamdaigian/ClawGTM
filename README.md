@@ -74,6 +74,53 @@ openclaw agent --message "Ship checklist" --thinking high
 
 Upgrading? [Updating guide](https://docs.openclaw.ai/install/updating) (and run `openclaw doctor`).
 
+## ClawGTM mode (autonomous GTM team on OpenClaw)
+
+If OpenClaw is your personal assistant control plane, **ClawGTM** is your autonomous revenue org running on top of it.
+
+Think of it as a company-in-a-repo:
+
+- **Head of Revenue orchestration** over specialist agents (research, narrative, growth, revops, BDR, GTM engineering).
+- **Employee-like identities** per agent (`{agent}@{org}`) with Slack/email/calendar behavior.
+- **Artifact-first output** into versioned docs (`analysis/*`, `narrative/*`, `gtm/*`, `metrics/*`, `revops/*`, `sales/*`, `partners/*`).
+- **Approval gates by default** for external sends, calendar bookings, paid actions, CRM writes, and external Slack posting.
+- **Unified audit trail** on every operation with `agent_id + task_id + run_id`.
+
+### ClawGTM V0.1 flow
+
+1. Provision identities (Google Workspace primary; Microsoft 365 currently stubbed).
+2. Connect per-agent OAuth credentials (Gmail, Calendar, Slack) with least-privilege scopes.
+3. Run orchestrated onboarding and weekly GTM loops.
+4. Route every outbound action through approval gates.
+
+### ClawGTM operator commands (current)
+
+```bash
+# OAuth onboarding (mock mode default; add --mode real for provider calls)
+clawgtm auth gmail --agent researcher
+clawgtm auth calendar --agent bdr
+clawgtm auth slack --agent narrative
+
+# Propose -> decide -> execute approval-gated action
+clawgtm approve propose --action external_email_send --agent bdr --task task-77 --run run-77 --target prospect@example.com
+clawgtm approve decision --request <request_id> --decision approve --by human:ops
+clawgtm approve execute --request <request_id>
+```
+
+### Where ClawGTM lives in this repo
+
+- Core contracts/task engine/audit/artifacts: `packages/clawgtm-core`
+- Identity provisioning adapters: `packages/clawgtm-identity`
+- Slack collaboration + thread discipline: `packages/clawgtm-slack`
+- OAuth onboarding + encrypted token storage: `packages/clawgtm-auth`
+- Operator CLI: `apps/clawgtm-cli`
+- Implementation notes and decisions: `docs/clawgtm/*`, `docs/decisions.md`
+
+### Vibe check
+
+You are not just chatting with a bot.
+You are running a **tiny, opinionated GTM organization** with guardrails, receipts, and a kill switch.
+
 ## Development channels
 
 - **stable**: tagged releases (`vYYYY.M.D` or `vYYYY.M.D-<patch>`), npm dist-tag `latest`.
