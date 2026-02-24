@@ -1,6 +1,47 @@
 import OpenAI from 'openai';
+import { loadConfig } from '../../../src/config/config.ts';
 
-const openai = new OpenAI();
+// Resolve OpenAI API key from OpenClaw config or environment
+function resolveOpenAIApiKey(): string {
+  // Try to load OpenClaw config
+  try {
+    const cfg = loadConfig();
+    
+    // Check for explicit API key in config providers
+    const providerConfig = cfg.models?.providers?.openai;
+    if (providerConfig && typeof providerConfig === 'object' && 'apiKey' in providerConfig) {
+      const apiKey = (providerConfig as { apiKey?: string }).apiKey?.trim();
+      if (apiKey) {
+        console.log('[LLM] Using API key from OpenClaw config (models.providers.openai.apiKey)');
+        return apiKey;
+      }
+    }
+  } catch (e) {
+    // Config loading failed, fall back to env var
+    console.log('[LLM] OpenClaw config not found, checking environment');
+  }
+
+  // Fall back to environment variable
+  const envKey = process.env.OPENAI_API_KEY?.trim();
+  if (envKey) {
+    console.log('[LLM] Using API key from OPENAI_API_KEY environment variable');
+    return envKey;
+  }
+
+  throw new Error(
+    'No OpenAI API key found. Set up OpenClaw with `openclaw onboard` or set OPENAI_API_KEY environment variable.'
+  );
+}
+
+// Lazy-initialize the OpenAI client
+let _openai: OpenAI | null = null;
+function getOpenAIClient(): OpenAI {
+  if (!_openai) {
+    const apiKey = resolveOpenAIApiKey();
+    _openai = new OpenAI({ apiKey });
+  }
+  return _openai;
+}
 
 export interface AgentPrompt {
   role: string;
@@ -11,6 +52,8 @@ export interface AgentPrompt {
 }
 
 export async function generateWithLLM(prompt: AgentPrompt): Promise<string> {
+  const openai = getOpenAIClient();
+  
   const systemPrompt = `You are ${prompt.role}, a member of an autonomous GTM team called ClawGTM.
 
 ${prompt.persona}
