@@ -63,7 +63,7 @@ export async function runOnboardingWorkflow(input: OnboardingRunInput): Promise<
     runId,
     text: 'Onboarding step 1/4: Researcher started.',
   });
-  const researcherArtifacts = runResearcher(input.objective, workspaceRoot);
+  const researcherArtifacts = await runResearcher(input.objective, workspaceRoot);
   engine.completeTask({
     runId,
     agentId: 'researcher',
@@ -118,7 +118,7 @@ export async function runOnboardingWorkflow(input: OnboardingRunInput): Promise<
       text: `Narrative blocked. Missing JTBD sections: ${jtbd.missing.join(', ')}`,
     });
   } else {
-    const narrativeArtifacts = runNarrative(input.objective, workspaceRoot);
+    const narrativeArtifacts = await runNarrative(input.objective, workspaceRoot);
     engine.completeTask({
       runId,
       agentId: 'narrative',
@@ -146,7 +146,7 @@ export async function runOnboardingWorkflow(input: OnboardingRunInput): Promise<
     runId,
     text: 'Onboarding step 3/4: Growth Analyst started.',
   });
-  const growthArtifacts = runGrowthAnalyst(workspaceRoot);
+  const growthArtifacts = await runGrowthAnalyst(workspaceRoot);
   engine.completeTask({
     runId,
     agentId: 'growth_analyst',
@@ -167,7 +167,7 @@ export async function runOnboardingWorkflow(input: OnboardingRunInput): Promise<
     runId,
     text: 'Onboarding step 4/4: Head of Revenue synthesis in progress.',
   });
-  const horArtifacts = runHeadOfRevenue(input.objective, workspaceRoot);
+  const horArtifacts = await runHeadOfRevenue(input.objective, workspaceRoot);
   engine.completeTask({
     runId,
     agentId: 'headofrevenue',
