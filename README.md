@@ -93,7 +93,40 @@ Think of it as a company-in-a-repo:
 3. Run orchestrated onboarding and weekly GTM loops.
 4. Route every outbound action through approval gates.
 
-### ClawGTM operator commands (current)
+### ClawGTM onboarding workflow
+
+Run the autonomous GTM team on your business:
+
+```bash
+cd ~/ClawGTM
+
+# 1. Create business context (place your business overview in company/)
+mkdir -p company
+# Copy your MASTERPLAN.md or business overview to company/business_overview.md
+
+# 2. Run the onboarding workflow
+npx tsx apps/clawgtm-cli/src/index.ts onboard run \
+  --objective "Build GTM strategy for [Your Product]" \
+  --channel "clawgtm-war-room" \
+  --workspace-root $(pwd)
+
+# Alternative: Capture context + run in one step
+npx tsx apps/clawgtm-cli/src/index.ts onboard full \
+  --company-name "Acme Corp" \
+  --service-summary "AI-powered data platform" \
+  --objective "Build GTM strategy" \
+  --icp "Data leaders at mid-market companies" \
+  --workspace-root $(pwd)
+```
+
+**Generated artifacts:**
+- `analysis/` — market opportunities, competitors, pain points, JTBD framework, current solutions
+- `narrative/` — positioning, messaging framework
+- `icp/` — core ICP, adjacent ICPs
+- `gtm/` — strategy, channel plan, experiment backlog
+- `metrics/` — north star tree, metrics dictionary
+
+### ClawGTM operator commands
 
 ```bash
 # OAuth onboarding (mock mode default; add --mode real for provider calls)
