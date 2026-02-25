@@ -4,6 +4,7 @@ import { captureBusinessContext } from '../../clawgtm-orchestrator/src/context-c
 import { runOnboardingWorkflow } from '../../clawgtm-orchestrator/src/onboarding-orchestrator.ts';
 import { createCliContext } from './context.ts';
 import { OAuthStateStore } from './oauth-state-store.ts';
+import { runWizard } from './wizard.ts';
 import type { OAuthProviderName } from '../../../packages/clawgtm-auth/src/contracts.ts';
 
 function readFlag(args: string[], name: string): string | null {
@@ -159,6 +160,17 @@ async function handleApprove(args: string[]): Promise<void> {
 async function handleOnboard(args: string[]): Promise<void> {
   const subcommand = args[1] ?? '';
 
+  // No subcommand = run the interactive wizard
+  if (!subcommand || subcommand.startsWith('--')) {
+    const skipInfra = args.includes('--skip-infra');
+    const skipOAuth = args.includes('--skip-oauth');
+    const mock = args.includes('--mock');
+    const workspaceRoot = readFlag(args, '--workspace-root') ?? process.cwd();
+    
+    await runWizard({ skipInfra, skipOAuth, mock, workspaceRoot });
+    return;
+  }
+
   if (subcommand === 'context' || subcommand === 'full') {
     const workspaceRoot = readFlag(args, '--workspace-root') ?? process.cwd();
     const contextResult = captureBusinessContext({
@@ -199,7 +211,10 @@ async function handleOnboard(args: string[]): Promise<void> {
   }
 
   throw new Error(
-    'Usage: clawgtm onboard <context|run|full> ...\n' +
+    'Usage: clawgtm onboard [--skip-infra] [--skip-oauth] [--mock] [--workspace-root <path>]\n' +
+      '       clawgtm onboard <context|run|full> ...\n' +
+      '\n' +
+      '  No subcommand: Run interactive wizard\n' +
       '  context/full flags: --company-name --service-summary --objective --icp [--constraints] [--pricing] [--target-metrics] [--workspace-root]\n' +
       '  run/full flags: --objective [--channel] [--workspace-root]',
   );

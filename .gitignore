@@ -76,3 +76,4 @@ memory/
 .agent/*.json
 !.agent/workflows/
 specs/
+.clawgtm/
