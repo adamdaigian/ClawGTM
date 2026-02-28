@@ -55,6 +55,9 @@ describe("run-node script", () => {
             OPENCLAW_RUNNER_LOG: "0",
           },
           spawn,
+          spawnSync: ((cmd: string) => ({
+            status: cmd === "pnpm" ? 0 : 1,
+          })) as typeof import("node:child_process").spawnSync,
           execPath: process.execPath,
           platform: process.platform,
         });
@@ -63,6 +66,52 @@ describe("run-node script", () => {
         await expect(fs.readFile(argsPath, "utf-8")).resolves.toContain("exec tsdown --no-clean");
         await expect(fs.readFile(indexPath, "utf-8")).resolves.toContain("sentinel");
         expect(nodeCalls).toEqual([[process.execPath, "openclaw.mjs", "--version"]]);
+      });
+    },
+  );
+
+  it.runIf(process.platform !== "win32")(
+    "falls back to npm exec build when pnpm is unavailable",
+    async () => {
+      await withTempDir(async (tmp) => {
+        const argsPath = path.join(tmp, ".build-args.txt");
+        await fs.mkdir(path.join(tmp, "dist"), { recursive: true });
+
+        const spawn = (cmd: string, args: string[]) => {
+          if (cmd === "npm") {
+            fsSync.writeFileSync(argsPath, args.join(" "), "utf-8");
+          }
+          return {
+            on: (event: string, cb: (code: number | null, signal: string | null) => void) => {
+              if (event === "exit") {
+                queueMicrotask(() => cb(0, null));
+              }
+              return undefined;
+            },
+          };
+        };
+
+        const { runNodeMain } = await import("../../scripts/run-node.mjs");
+        const exitCode = await runNodeMain({
+          cwd: tmp,
+          args: ["--version"],
+          env: {
+            ...process.env,
+            OPENCLAW_FORCE_BUILD: "1",
+            OPENCLAW_RUNNER_LOG: "0",
+          },
+          spawn,
+          spawnSync: ((cmd: string) => ({
+            status: cmd === "npm" ? 0 : 1,
+          })) as typeof import("node:child_process").spawnSync,
+          execPath: process.execPath,
+          platform: process.platform,
+        });
+
+        expect(exitCode).toBe(0);
+        await expect(fs.readFile(argsPath, "utf-8")).resolves.toContain(
+          "exec -- tsdown --no-clean",
+        );
       });
     },
   );

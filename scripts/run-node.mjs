@@ -6,7 +6,8 @@ import process from "node:process";
 import { pathToFileURL } from "node:url";
 
 const compiler = "tsdown";
-const compilerArgs = ["exec", compiler, "--no-clean"];
+const pnpmCompilerArgs = ["exec", compiler, "--no-clean"];
+const npmCompilerArgs = ["exec", "--", compiler, "--no-clean"];
 
 export const runNodeWatchedPaths = ["src", "tsconfig.json", "package.json"];
 
@@ -176,6 +177,38 @@ const logRunner = (message, deps) => {
   deps.stderr.write(`[openclaw] ${message}\n`);
 };
 
+const commandExists = (command, deps) => {
+  try {
+    const result = deps.spawnSync(command, ["--version"], {
+      cwd: deps.cwd,
+      env: deps.env,
+      stdio: "ignore",
+    });
+    return result.status === 0;
+  } catch {
+    return false;
+  }
+};
+
+const resolveBuildCommand = (deps) => {
+  if (commandExists("pnpm", deps)) {
+    return {
+      runner: "pnpm",
+      cmd: deps.platform === "win32" ? "cmd.exe" : "pnpm",
+      args:
+        deps.platform === "win32"
+          ? ["/d", "/s", "/c", "pnpm", ...pnpmCompilerArgs]
+          : pnpmCompilerArgs,
+    };
+  }
+  return {
+    runner: "npm",
+    cmd: deps.platform === "win32" ? "cmd.exe" : "npm",
+    args:
+      deps.platform === "win32" ? ["/d", "/s", "/c", "npm", ...npmCompilerArgs] : npmCompilerArgs,
+  };
+};
+
 const runOpenClaw = async (deps) => {
   const nodeProcess = deps.spawn(deps.execPath, ["openclaw.mjs", ...deps.args], {
     cwd: deps.cwd,
@@ -231,10 +264,11 @@ export async function runNodeMain(params = {}) {
   }
 
   logRunner("Building TypeScript (dist is stale).", deps);
-  const buildCmd = deps.platform === "win32" ? "cmd.exe" : "pnpm";
-  const buildArgs =
-    deps.platform === "win32" ? ["/d", "/s", "/c", "pnpm", ...compilerArgs] : compilerArgs;
-  const build = deps.spawn(buildCmd, buildArgs, {
+  const buildCommand = resolveBuildCommand(deps);
+  if (buildCommand.runner === "npm") {
+    logRunner("pnpm not found; falling back to npm exec.", deps);
+  }
+  const build = deps.spawn(buildCommand.cmd, buildCommand.args, {
     cwd: deps.cwd,
     env: deps.env,
     stdio: "inherit",

@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { makeTempWorkspace } from "../test-helpers/workspace.js";
 import { captureEnv } from "../test-utils/env.js";
 import { createThrowingRuntime, readJsonFile } from "./onboard-non-interactive.test-helpers.js";
@@ -12,6 +12,7 @@ const gatewayClientCalls: Array<{
   onHelloOk?: () => void;
   onClose?: (code: number, reason: string) => void;
 }> = [];
+let gatewayRequestImpl: (() => Promise<{ ok: boolean }>) | null = null;
 const ensureWorkspaceAndSessionsMock = vi.fn(async (..._args: unknown[]) => {});
 
 vi.mock("../gateway/client.js", () => ({
@@ -32,6 +33,9 @@ vi.mock("../gateway/client.js", () => ({
       gatewayClientCalls.push(params);
     }
     async request() {
+      if (gatewayRequestImpl) {
+        return await gatewayRequestImpl();
+      }
       return { ok: true };
     }
     start() {
@@ -114,6 +118,10 @@ describe("onboard (non-interactive): gateway and remote auth", () => {
       await fs.rm(tempHome, { recursive: true, force: true });
     }
     envSnapshot.restore();
+  });
+
+  afterEach(() => {
+    gatewayRequestImpl = null;
   });
 
   it("writes gateway token auth into config", async () => {
@@ -222,6 +230,35 @@ describe("onboard (non-interactive): gateway and remote auth", () => {
       expect(cfg.gateway?.port).toBe(port);
       expect(cfg.gateway?.auth?.mode).toBe("token");
       expect((cfg.gateway?.auth?.token ?? "").length).toBeGreaterThan(8);
+    });
+  }, 60_000);
+
+  it("continues when health check fails and daemon install is skipped", async () => {
+    await withStateDir("state-no-daemon-health-", async (stateDir) => {
+      gatewayRequestImpl = async () => {
+        throw new Error("gateway closed (1006 abnormal closure)");
+      };
+
+      const workspace = path.join(stateDir, "openclaw");
+      await runNonInteractiveOnboarding(
+        {
+          nonInteractive: true,
+          mode: "local",
+          workspace,
+          authChoice: "skip",
+          skipSkills: true,
+          skipHealth: false,
+          installDaemon: false,
+          gatewayBind: "loopback",
+        },
+        runtime,
+      );
+
+      const configPath = resolveStateConfigPath(process.env, stateDir);
+      const cfg = await readJsonFile<{
+        agents?: { defaults?: { workspace?: string } };
+      }>(configPath);
+      expect(cfg?.agents?.defaults?.workspace).toBe(workspace);
     });
   }, 60_000);
 });

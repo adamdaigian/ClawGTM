@@ -4,6 +4,7 @@ import { resolveGatewayPort, writeConfigFile } from "../../config/config.js";
 import { logConfigUpdated } from "../../config/logging.js";
 import type { RuntimeEnv } from "../../runtime.js";
 import { DEFAULT_GATEWAY_DAEMON_RUNTIME } from "../daemon-runtime.js";
+import { formatHealthCheckFailure } from "../health-format.js";
 import { applyOnboardingLocalWorkspaceConfig } from "../onboard-config.js";
 import {
   applyWizardMetadata,
@@ -105,12 +106,49 @@ export async function runNonInteractiveOnboardingLocal(params: {
       customBindHost: nextConfig.gateway?.customBindHost,
       basePath: undefined,
     });
-    await waitForGatewayReachable({
+    const reachable = await waitForGatewayReachable({
       url: links.wsUrl,
       token: gatewayResult.gatewayToken,
       deadlineMs: 15_000,
     });
-    await healthCommand({ json: false, timeoutMs: 10_000 }, runtime);
+    if (!reachable.ok) {
+      const detail = reachable.detail ? ` (${reachable.detail})` : "";
+      if (opts.installDaemon) {
+        runtime.error(
+          [
+            `Gateway health check failed${detail}.`,
+            "Gateway did not become reachable after daemon setup.",
+            "Docs:",
+            "https://docs.openclaw.ai/gateway/health",
+            "https://docs.openclaw.ai/gateway/troubleshooting",
+          ].join("\n"),
+        );
+        runtime.exit(1);
+        return;
+      }
+      runtime.log(
+        [
+          `Gateway not reachable yet${detail}. Continuing because daemon install is skipped.`,
+          `Run \`${formatCliCommand("openclaw health")}\` after starting the gateway.`,
+        ].join("\n"),
+      );
+    } else {
+      try {
+        await healthCommand({ json: false, timeoutMs: 10_000 }, runtime);
+      } catch (err) {
+        if (opts.installDaemon) {
+          runtime.error(formatHealthCheckFailure(err));
+          runtime.exit(1);
+          return;
+        }
+        runtime.log(
+          [
+            "Gateway health check failed; continuing because daemon install is skipped.",
+            formatHealthCheckFailure(err, { rich: false }),
+          ].join("\n"),
+        );
+      }
+    }
   }
 
   logNonInteractiveOnboardingJson({
