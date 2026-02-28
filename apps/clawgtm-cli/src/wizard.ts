@@ -33,7 +33,7 @@ interface BusinessContext {
 
 interface AgentIdentities {
   org: string;
-  agents: Record<string, { email: string; name: string }>;
+  agents: Record<string, { email: string; name: string; emoji?: string }>;
 }
 
 interface DetectedDoc {
@@ -566,23 +566,34 @@ ${context.constraints.length > 0 ? context.constraints.map(c => `- ${c}`).join('
 }
 
 // ============================================================================
-// Agent Identity Setup (Step 4)
+// Agent Identity Setup (Step 4) - Simplified: Pre-defined personas, just ask for org slug
 // ============================================================================
 
-async function runAgentIdentitySetup(workspaceRoot: string): Promise<AgentIdentities | null> {
-  const setup = await p.confirm({
-    message: 'Set up agent identities? (recommended for Slack/email integration)',
-    initialValue: false,
-  });
+// Pre-defined agent personas (hardcoded)
+const AGENT_PERSONAS = {
+  researcher: { name: 'Scout', emoji: '🔍', purpose: 'Market research & competitive analysis' },
+  narrative: { name: 'Story', emoji: '📖', purpose: 'Positioning & messaging' },
+  growth: { name: 'Metric', emoji: '📊', purpose: 'Metrics & growth strategy' },
+  hor: { name: 'Chief', emoji: '👔', purpose: 'Head of Revenue orchestration' },
+} as const;
 
-  if (p.isCancel(setup) || !setup) {
-    p.log.info('Skipping agent identity setup. Using default identities.');
-    return null;
+async function runAgentIdentitySetup(workspaceRoot: string, companyName?: string): Promise<AgentIdentities | null> {
+  p.log.message('');
+  p.log.message('Using pre-defined agent personas:');
+  for (const [slug, info] of Object.entries(AGENT_PERSONAS)) {
+    p.log.message(`  ${info.emoji} ${info.name} (${slug}) — ${info.purpose}`);
   }
+  p.log.message('');
+
+  // Derive default org slug from company name if available
+  const defaultSlug = companyName 
+    ? companyName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+    : undefined;
 
   const org = await p.text({
     message: 'Organization slug (used in agent emails):',
-    placeholder: 'acme',
+    placeholder: defaultSlug || 'acme',
+    initialValue: defaultSlug,
     validate: (val) => {
       if (!val) return 'Organization slug required';
       if (!/^[a-z0-9-]+$/.test(val)) return 'Use lowercase letters, numbers, and hyphens only';
@@ -595,16 +606,17 @@ async function runAgentIdentitySetup(workspaceRoot: string): Promise<AgentIdenti
   const agents: AgentIdentities = {
     org,
     agents: {
-      researcher: { email: `researcher@${org}`, name: 'Scout' },
-      narrative: { email: `narrative@${org}`, name: 'Story' },
-      growth: { email: `growth@${org}`, name: 'Metric' },
-      hor: { email: `hor@${org}`, name: 'Chief' },
+      researcher: { email: `scout@${org}`, name: 'Scout', emoji: '🔍' },
+      narrative: { email: `story@${org}`, name: 'Story', emoji: '📖' },
+      growth: { email: `metric@${org}`, name: 'Metric', emoji: '📊' },
+      hor: { email: `chief@${org}`, name: 'Chief', emoji: '👔' },
     },
   };
 
-  p.log.success('Agent identities configured:');
+  p.log.message('');
+  p.log.success('Generated agent identities:');
   for (const [slug, info] of Object.entries(agents.agents)) {
-    p.log.message(`  ✓ ${info.email} — ${info.name}`);
+    p.log.message(`  ✓ ${info.email} — ${info.name} ${(info as any).emoji || ''}`);
   }
 
   // Write to file
@@ -803,8 +815,8 @@ export async function runWizard(options: WizardOptions = {}): Promise<void> {
   p.log.success('Business context saved');
   saveWizardState(workspaceRoot, { step: 4, businessContext });
 
-  // Step 4: Agent identity setup
-  const agentIdentities = await runAgentIdentitySetup(workspaceRoot);
+  // Step 4: Agent identity setup (uses company name for default org slug)
+  const agentIdentities = await runAgentIdentitySetup(workspaceRoot, businessContext.companyName);
   saveWizardState(workspaceRoot, { step: 5, agentIdentities });
 
   // Step 5: OAuth (skip for now, default to mock)
